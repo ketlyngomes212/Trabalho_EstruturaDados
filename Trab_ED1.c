@@ -1,0 +1,134 @@
+#include <stdio.h>
+
+// Cria o nodo
+typedef struct nodo 
+{
+ float dado;
+ int lin, col;
+ struct nodo *prox;
+}Matriz_Esparsa; 
+
+//--------------------------------------------------------------------------------------------------------
+// cria uma estrtutura de matriz - Lista encadeada + dimensões
+typedef struct {
+    Matriz_Esparsa *lista;  // lista com os valores não-zero
+    int  lin, col;          // dimensões da matriz
+    char nome;              // identificador (A, B, C)
+} Matriz;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que faz a alocação de memória para cada nodo criado para uma lista encadeada;
+Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col){
+    Matriz_Esparsa *p; // Declara um ponteiro
+    p = (Matriz_Esparsa *) malloc(sizeof(Matriz_Esparsa)); //Aloca memória para 1 nodo
+     if(!p){ //Se p == NULL → falha de memória
+    printf("Problema de alocação");
+    exit(0); // mostra o erro e encerra
+    }
+
+    p->lin = lin; //guarda a linha
+    p->col = col; //guarda a colunha
+    return p; // Retorna o endereço do nodo criado
+}
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que insere na lista encadeada um nodo alocado;
+void inserir_lista(Matriz **lista, int dado, int col, int lin){
+    /*JEITO 1 inserir no começo:     
+    novo->prox = *lista;
+    *lista = novo;*/
+
+    //JEITO 2 inserir oordernado: 
+    Matriz_Esparsa *novo; // Cria um novo nodo
+    novo = Cria_Matriz(dado, lin, col); // Cria um novo nodo na memoria
+    novo->dado = dado; //guarda valor
+    
+    Matriz_Esparsa *aux  = *lista; //comeca no primeiro nó
+    Matriz_Esparsa *ant  = NULL; 
+//enqt n term a lista E a lin do nodo 1 < lin atual OU se estiver na mesma linha, ordena pela coluna
+    while(aux != NULL && (aux->lin < lin || (aux->lin == lin && aux->col < col))){
+        ant = aux; // anterior recebe o valor de aux
+        aux = aux->prox; // auxiliar pega o prox valor
+    }
+
+    novo->prox = aux; // O novo nó aponta para o aux (que é maior que ele ou é o fim da lista)
+    if(ant == NULL){ // caso o anteiror seja null (lista vazia)
+        *lista = novo; // o novo nó é primeiro da lista
+    } else {
+        ant->prox = novo; // o nó anterior (ant) agora aponta para o novo, finalizando o encaixe.
+    }
+
+}
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que busca os dados em uma lista encadeada;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que libera da memória uma lista encadeada;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que lê os dados da matriz, via teclado, e inseri na lista encadeada somente os dados diferentes de zero;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que soma duas matrizes;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que subtrai duas matrizes;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que multiplica duas matrizes;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que gera a matriz transposta;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que imprime todos os dados da matriz, inclusive os zeros;
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que imprime os elementos da diagonal principal, inclusive os zeros caso existam.
+
+void main (){
+    int opcao;
+ 
+    do {
+        printf("===========  MENU ===========\n");
+        printf("1 - Criar matriz\n");
+        printf("2 - Imprimir matriz\n");
+        printf("3 - Diagonal principal\n");
+        printf("4 - Soma das matrizes\n");
+        printf("5 - Subtracao das matrizes\n");
+        printf("6 - Multiplicacao das matrizes\n");
+        printf("7 - Transposta da matriz\n");
+        printf("8 - Apagar matrizes\n");
+        printf("0 - Sair\n");
+        printf("========================================\n");
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+    } while ( opcao != 0);
+    
+    switch (opcao){
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            break;
+        case 7:
+            break;
+        case 8:
+            break;
+
+        case 0:
+          printf("Saindo..\n");
+            break;
+
+        default:
+            printf("Opcao invalida!\n");
+    } 
+}
