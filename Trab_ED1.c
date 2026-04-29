@@ -65,7 +65,7 @@ void criar_matriz() {
     printf("\nMatriz %d", m->id);
     printf("\nDigite a quantidade de colunas:");
     scanf("%d", &m->col);
-    printf("Digite a quantidade de linhas:\n");
+    printf("Digite a quantidade de linhas:");
     scanf("%d", &m->lin);
     
     if (m->lin == 0 || m->col == 0) {
@@ -97,7 +97,7 @@ void listar_Matrizes(){
     Matriz *aux = matrizes; // recebe o primeiro nó
 
     if(aux == NULL){ //se o pont externo é null = lista vazia
-        printf("\n Nenhuma matriz criada ainda.");
+        printf("\nNenhuma matriz criada ainda.");
         return;
     }
 
@@ -141,6 +141,11 @@ Matriz *buscar_IdMatriz(int id){
 //Uma função que imprime todos os dados da matriz, inclusive os zeros;
 void imprimir_Matriz(int id){
     Matriz *m = buscar_IdMatriz(id); //retorna o ponteiro da matriz com o id pedido
+    
+    if(!m){
+        printf("Matriz %d não existe.\n", id);
+        return;
+    }
 
     printf("\nMatriz %d: [%dx%d]\n", m->id,m->lin,m->col);
 
@@ -169,12 +174,57 @@ void imprimir_Matriz(int id){
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que libera da memória uma lista encadeada;
+void Liberar_ListaInterna(Matriz_Esparsa **lista){
+    Matriz_Esparsa *aux;
+    while (*lista != NULL){
+        aux = *lista;
+        *lista = (*lista)->prox;
+        free(aux);
+}
+}
 
+//liberar toda a lista
+void liberar_ListasExternas(){
+    Matriz *aux;
+    while(matrizes != NULL){
+        aux = matrizes;
+        matrizes = matrizes->prox;
+        Liberar_ListaInterna(&aux->lista);
+        free(aux);
+    }
+
+    matrizes = NULL;
+    contadorID = 1;
+    printf("Todas as listas foram apagadas");
+
+}
+
+void Liberar_Matriz(int id){
+    Matriz *aux = matrizes;
+    Matriz *ant = NULL;
+    
+    while( aux != NULL && aux->id != id ){
+        ant = aux;
+        aux = aux->prox;
+    }
+
+    if(aux == NULL){
+        printf("\n Matriz não encontrada.");
+        return;
+    }
+
+    ant->prox = aux->prox;
+    printf("Matriz %d removida da lista!", aux->id);
+    free(aux);
+    
+}
+
+//--------------------------------------------------------------------------------------------------------
 int main (){
     int opcao, id1;
     
     do {
-        printf("===========  MENU ===========\n");
+        printf("\n===========  MENU ===========\n");
         printf("1 - Criar matriz\n");
         printf("2 - Imprimir matriz\n");
         printf("3 - Diagonal principal\n");
@@ -193,10 +243,14 @@ int main (){
             criar_matriz();
             break;
         case 2:
-            listar_Matrizes();
-            printf("Digite o ID: "); 
-            scanf("%d", &id1);
-            imprimir_Matriz(id1);
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz parar imprimir");
+            } else {
+                listar_Matrizes();
+                printf("Digite o ID: "); 
+                scanf("%d", &id1); 
+                imprimir_Matriz(id1);
+            }
             break;
         case 3:
             break;
@@ -209,6 +263,7 @@ int main (){
         case 7:
             break;
         case 8:
+            liberar_ListasExternas();
             break;
 
         case 0:
