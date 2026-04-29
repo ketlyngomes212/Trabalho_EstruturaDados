@@ -34,29 +34,7 @@ Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col){
 //--------------------------------------------------------------------------------------------------------
 //Uma função que insere na lista encadeada um nodo alocado;
 void inserir_lista(Matriz **lista, int dado, int col, int lin){
-    /*JEITO 1 inserir no começo:     
-    novo->prox = *lista;
-    *lista = novo;*/
 
-    //JEITO 2 inserir oordernado: 
-    Matriz_Esparsa *novo; // Cria um novo nodo
-    novo = Cria_Matriz(dado, lin, col); // Cria um novo nodo na memoria
-    novo->dado = dado; //guarda valor
-    
-    Matriz_Esparsa *aux  = *lista; //comeca no primeiro nó
-    Matriz_Esparsa *ant  = NULL; 
-//enqt n term a lista E a lin do nodo 1 < lin atual OU se estiver na mesma linha, ordena pela coluna
-    while(aux != NULL && (aux->lin < lin || (aux->lin == lin && aux->col < col))){
-        ant = aux; // anterior recebe o valor de aux
-        aux = aux->prox; // auxiliar pega o prox valor
-    }
-
-    novo->prox = aux; // O novo nó aponta para o aux (que é maior que ele ou é o fim da lista)
-    if(ant == NULL){ // caso o anteiror seja null (lista vazia)
-        *lista = novo; // o novo nó é primeiro da lista
-    } else {
-        ant->prox = novo; // o nó anterior (ant) agora aponta para o novo, finalizando o encaixe.
-    }
 
 }
 
