@@ -25,21 +25,16 @@ int contadorID = 1; //contador pra id das matrizes
 // Protótipos das funções
 Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col);
 void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col);
-
 void criar_matriz();
 void listar_Matrizes();
-
 float buscar_Lista(Matriz_Esparsa *lista, int lin, int col);
 Matriz *buscar_IdMatriz(int id);
-
 void imprimir_Matriz(int id);
-
 void soma_matrizes(int id1, int id2);
 void subtrair_matrizes(int id1, int id2);
 void multiplicar_matrizes(int id1, int id2);
 void transposta(int id);
 void diagonal_principal(int id);
-
 void liberar_Lista(Matriz_Esparsa **lista);
 void liberar_TodasMatrizes();
 void liberar_Matriz(int id);
@@ -86,10 +81,10 @@ void criar_matriz() {
     contadorID++;  // contador id soma;
     
     printf("\nMatriz %d", m->id);
-    printf("\nDigite a quantidade de colunas:");
-    scanf("%d", &m->col);
-    printf("Digite a quantidade de linhas:");
+    printf("\nDigite a quantidade de linhas:");
     scanf("%d", &m->lin);
+    printf("Digite a quantidade de colunas:");
+    scanf("%d", &m->col);
     
     if (m->lin == 0 || m->col == 0) {
         printf("Matriz sem dimensoes!\n");
@@ -142,7 +137,7 @@ float buscar_Lista(Matriz_Esparsa *lista, int lin, int col){
 
         aux = aux->prox; // vai pro prox nó
     }
-    return 0.0; // se n achou nada retorna zero
+    return 0; // se n achou nada retorna zero
 }
 
 
@@ -174,7 +169,7 @@ void imprimir_Matriz(int id){
 
     for(int i = 0; i < m->lin; i++){
         for(int j = 0; j < m->col; j++){
-            printf(" %.2f ", buscar_Lista(m->lista, i, j));
+            printf("%.2f\t", buscar_Lista(m->lista, i, j));
         }
         printf("\n");
     }
@@ -202,7 +197,7 @@ void soma_matrizes(int id1, int id2){
         for(int j = 0; j < m1->col; j++){
             float v1 = buscar_Lista(m1->lista, i, j);
             float v2 = buscar_Lista(m2->lista, i, j);
-            printf(" %.2f ", v1 + v2);
+            printf("%.2f\t", v1 + v2);
         }
         printf("\n");
     }
@@ -230,7 +225,7 @@ void subtrair_matrizes(int id1, int id2){
         for(int j = 0; j < m1->col; j++){
             float v1 = buscar_Lista(m1->lista, i, j);
             float v2 = buscar_Lista(m2->lista, i, j);
-            printf(" %.2f ", v1 - v2);
+            printf("%.2f\t", v1 - v2);
         }
         printf("\n");
     }
@@ -293,7 +288,7 @@ void transposta(int id){
 
     for(int i = 0; i < m->col; i++){
         for(int j = 0; j < m->lin; j++){
-            printf(" %.2f ", buscar_Lista(nova, i, j));
+            printf("%.2f\t", buscar_Lista(nova, i, j));
         }
         printf("\n");
     }
@@ -314,7 +309,7 @@ void diagonal_principal(int id){
     printf("\nDiagonal principal da matriz %d:\n", id);
 
     for(int i = 0; i < m->lin; i++){
-        printf(" %.2f ", buscar_Lista(m->lista, i, i));
+        printf("%.2f\t", buscar_Lista(m->lista, i, i));
     }
     printf("\n");
 }
@@ -389,6 +384,7 @@ int main (){
         printf("7 - Transposta da matriz\n");
         printf("8 - Apagar matriz especifica\n");
         printf("9 - Apagar todas as matrizes\n");
+        printf("10 - Listar todas as matrizes\n");
         printf("0 - Sair\n");
         printf("\nOpcao: ");
         scanf("%d", &opcao);
@@ -485,6 +481,10 @@ int main (){
             } else {
                 liberar_TodasMatrizes();
             }
+            break;
+
+        case 10:
+            listar_Matrizes();
             break;
 
         case 0:
