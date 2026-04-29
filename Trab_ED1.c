@@ -22,6 +22,29 @@ Matriz *matrizes = NULL; //Ponteiro global da lista externa - aponta para a prim
 int contadorID = 1; //contador pra id das matrizes
 
 //--------------------------------------------------------------------------------------------------------
+// Protótipos das funções
+Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col);
+void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col);
+
+void criar_matriz();
+void listar_Matrizes();
+
+float buscar_Lista(Matriz_Esparsa *lista, int lin, int col);
+Matriz *buscar_IdMatriz(int id);
+
+void imprimir_Matriz(int id);
+
+void soma_matrizes(int id1, int id2);
+void subtrair_matrizes(int id1, int id2);
+void multiplicar_matrizes(int id1, int id2);
+void transposta(int id);
+void diagonal_principal(int id);
+
+void liberar_Lista(Matriz_Esparsa **lista);
+void liberar_TodasMatrizes();
+void liberar_Matriz(int id);
+//--------------------------------------------------------------------------------------------------------
+
 //Uma função que faz a alocação de memória para cada nodo criado para uma lista encadeada;
 Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col){
     Matriz_Esparsa *p; // Declara um ponteiro
@@ -159,18 +182,142 @@ void imprimir_Matriz(int id){
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que soma duas matrizes;
+void soma_matrizes(int id1, int id2){
+    Matriz *m1 = buscar_IdMatriz(id1);
+    Matriz *m2 = buscar_IdMatriz(id2);
+
+    if(!m1 || !m2){
+        printf("Uma das matrizes nao existe.\n");
+        return;
+    }
+
+    if(m1->lin != m2->lin || m1->col != m2->col){
+        printf("Dimensoes incompatíveis para soma.\n");
+        return;
+    }
+
+    printf("\nResultado da soma:\n");
+
+    for(int i = 0; i < m1->lin; i++){
+        for(int j = 0; j < m1->col; j++){
+            float v1 = buscar_Lista(m1->lista, i, j);
+            float v2 = buscar_Lista(m2->lista, i, j);
+            printf(" %.2f ", v1 + v2);
+        }
+        printf("\n");
+    }
+}
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que subtrai duas matrizes;
+void subtrair_matrizes(int id1, int id2){
+    Matriz *m1 = buscar_IdMatriz(id1);
+    Matriz *m2 = buscar_IdMatriz(id2);
+
+    if(!m1 || !m2){
+        printf("Uma das matrizes nao existe.\n");
+        return;
+    }
+
+    if(m1->lin != m2->lin || m1->col != m2->col){
+        printf("Dimensoes incompatíveis para subtracao.\n");
+        return;
+    }
+
+    printf("\nResultado da subtracao:\n");
+
+    for(int i = 0; i < m1->lin; i++){
+        for(int j = 0; j < m1->col; j++){
+            float v1 = buscar_Lista(m1->lista, i, j);
+            float v2 = buscar_Lista(m2->lista, i, j);
+            printf(" %.2f ", v1 - v2);
+        }
+        printf("\n");
+    }
+}
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que multiplica duas matrizes;
+void multiplicar_matrizes(int id1, int id2){
+    Matriz *m1 = buscar_IdMatriz(id1);
+    Matriz *m2 = buscar_IdMatriz(id2);
+
+    if(!m1 || !m2){
+        printf("Uma das matrizes nao existe.\n");
+        return;
+    }
+
+    if(m1->col != m2->lin){
+        printf("Dimensoes incompatíveis para multiplicacao.\n");
+        return;
+    }
+
+    printf("\nResultado da multiplicacao:\n");
+
+    for(int i = 0; i < m1->lin; i++){
+        for(int j = 0; j < m2->col; j++){
+
+            float soma = 0;
+
+            for(int k = 0; k < m1->col; k++){
+                float v1 = buscar_Lista(m1->lista, i, k);
+                float v2 = buscar_Lista(m2->lista, k, j);
+                soma += v1 * v2;
+            }
+
+            printf(" %.2f ", soma);
+        }
+        printf("\n");
+    }
+}
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que gera a matriz transposta;
+void transposta(int id){
+    Matriz *m = buscar_IdMatriz(id);
+
+    if(!m){
+        printf("Matriz nao encontrada.\n");
+        return;
+    }
+
+    Matriz_Esparsa *nova = NULL;
+
+    Matriz_Esparsa *aux = m->lista;
+    while(aux != NULL){
+        inserir_lista(&nova, aux->dado, aux->col, aux->lin);
+        aux = aux->prox;
+    }
+
+    printf("\nMatriz transposta:\n");
+
+    for(int i = 0; i < m->col; i++){
+        for(int j = 0; j < m->lin; j++){
+            printf(" %.2f ", buscar_Lista(nova, i, j));
+        }
+        printf("\n");
+    }
+
+    liberar_Lista(&nova);
+}
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que imprime os elementos da diagonal principal, inclusive os zeros caso existam.
+void diagonal_principal(int id){
+    Matriz *m = buscar_IdMatriz(id);
+
+    if(!m){
+        printf("Matriz nao encontrada.\n");
+        return;
+    }
+
+    printf("\nDiagonal principal da matriz %d:\n", id);
+
+    for(int i = 0; i < m->lin; i++){
+        printf(" %.2f ", buscar_Lista(m->lista, i, i));
+    }
+    printf("\n");
+}
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que libera da memória uma lista encadeada;
@@ -240,20 +387,19 @@ int main (){
         printf("5 - Subtracao das matrizes\n");
         printf("6 - Multiplicacao das matrizes\n");
         printf("7 - Transposta da matriz\n");
-        printf("8 - Apagar matrize especifica\n");
+        printf("8 - Apagar matriz especifica\n");
         printf("9 - Apagar todas as matrizes\n");
         printf("0 - Sair\n");
-        //Uma função que imprime todos os dados da matriz, inclusive os zeros;
         printf("\nOpcao: ");
         scanf("%d", &opcao);
         
-        switch (opcao){
-            case 1:
+    switch (opcao){
+        case 1:
             criar_matriz();
             break;
         case 2:
             if(matrizes == NULL){
-                printf("\nNenhuma matriz parar imprimir");
+                printf("\nNenhuma matriz para imprimir");
             } else {
                 listar_Matrizes();
                 printf("Digite o ID: "); 
@@ -262,18 +408,70 @@ int main (){
             }
             break;
         case 3:
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz cadastrada\n");
+            } else {
+                listar_Matrizes();
+                printf("Digite o ID: ");
+                scanf("%d", &id1);
+                diagonal_principal(id1);
+            }
             break;
-        case 4:
+        case 4: { 
+            int id2;
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz cadastrada\n");
+            } else {
+                listar_Matrizes();
+                printf("Digite ID da matriz 1: ");
+                scanf("%d", &id1);
+                printf("Digite ID da matriz 2: ");
+                scanf("%d", &id2);
+                soma_matrizes(id1, id2);
+            }
             break;
-        case 5:
+        }
+        case 5: { 
+            int id2;
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz cadastrada\n");
+            } else {
+                listar_Matrizes();
+                printf("Digite ID da matriz 1: ");
+                scanf("%d", &id1);
+                printf("Digite ID da matriz 2: ");
+                scanf("%d", &id2);
+                subtrair_matrizes(id1, id2);
+            }
             break;
-        case 6:
+        }
+        case 6: { 
+            int id2;
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz cadastrada\n");
+            } else {
+                listar_Matrizes();
+                printf("Digite ID da matriz 1: ");
+                scanf("%d", &id1);
+                printf("Digite ID da matriz 2: ");
+                scanf("%d", &id2);
+                multiplicar_matrizes(id1, id2);
+            }
             break;
-        case 7:
+        }
+        case 7: 
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz cadastrada\n");
+            } else {
+                listar_Matrizes();
+                printf("Digite o ID: ");
+                scanf("%d", &id1);
+                transposta(id1);
+            }
             break;
         case 8:
             if(matrizes == NULL){
-                printf("\nNenhuma matriz parar apagar");
+                printf("\nNenhuma matriz para apagar");
             } else {
                 listar_Matrizes();
                 printf("Digite o ID para apagar: "); 
@@ -283,7 +481,7 @@ int main (){
             break;
         case 9:
             if(matrizes == NULL){
-                printf("\nNenhuma matriz parar apagar");
+                printf("\nNenhuma matriz para apagar");
             } else {
                 liberar_TodasMatrizes();
             }
@@ -291,12 +489,12 @@ int main (){
 
         case 0:
             liberar_TodasMatrizes();
-            printf("\nSaindo..");
+            printf("\nSaindo..\n");
             break;
 
         default:
             printf("Opcao invalida!\n");
-    } 
+} 
 
     } while ( opcao != 0);
 
