@@ -174,7 +174,7 @@ void imprimir_Matriz(int id){
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que libera da memória uma lista encadeada;
-void Liberar_ListaInterna(Matriz_Esparsa **lista){
+void liberar_Lista(Matriz_Esparsa **lista){
     Matriz_Esparsa *aux;
     while (*lista != NULL){
         aux = *lista;
@@ -184,22 +184,23 @@ void Liberar_ListaInterna(Matriz_Esparsa **lista){
 }
 
 //liberar toda a lista
-void liberar_ListasExternas(){
+void liberar_TodasMatrizes(){
     Matriz *aux;
     while(matrizes != NULL){
         aux = matrizes;
         matrizes = matrizes->prox;
-        Liberar_ListaInterna(&aux->lista);
+        liberar_Lista(&aux->lista);
         free(aux);
     }
 
     matrizes = NULL;
     contadorID = 1;
-    printf("Todas as listas foram apagadas");
+    printf("Todas as matrizes foram apagadas");
 
 }
 
-void Liberar_Matriz(int id){
+//liberar especifica
+void liberar_Matriz(int id){
     Matriz *aux = matrizes;
     Matriz *ant = NULL;
     
@@ -213,9 +214,16 @@ void Liberar_Matriz(int id){
         return;
     }
 
-    ant->prox = aux->prox;
-    printf("Matriz %d removida da lista!", aux->id);
+    liberar_Lista(&aux->lista);
+
+    if(ant == NULL){
+        matrizes = aux->prox;
+    } else {
+        ant->prox = aux->prox;
+    }
     free(aux);
+
+    printf("Matriz %d removida da lista!", id);
     
 }
 
@@ -232,7 +240,8 @@ int main (){
         printf("5 - Subtracao das matrizes\n");
         printf("6 - Multiplicacao das matrizes\n");
         printf("7 - Transposta da matriz\n");
-        printf("8 - Apagar matrizes\n");
+        printf("8 - Apagar matrize especifica\n");
+        printf("9 - Apagar todas as matrizes\n");
         printf("0 - Sair\n");
         //Uma função que imprime todos os dados da matriz, inclusive os zeros;
         printf("\nOpcao: ");
@@ -263,11 +272,26 @@ int main (){
         case 7:
             break;
         case 8:
-            liberar_ListasExternas();
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz parar apagar");
+            } else {
+                listar_Matrizes();
+                printf("Digite o ID para apagar: "); 
+                scanf("%d", &id1); 
+                liberar_Matriz(id1);
+            }
+            break;
+        case 9:
+            if(matrizes == NULL){
+                printf("\nNenhuma matriz parar apagar");
+            } else {
+                liberar_TodasMatrizes();
+            }
             break;
 
         case 0:
-          printf("Saindo..\n");
+            liberar_TodasMatrizes();
+            printf("\nSaindo..");
             break;
 
         default:
