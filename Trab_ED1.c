@@ -28,6 +28,8 @@ void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col);
 
 void criar_matriz();
 void listar_Matrizes();
+Matriz *criar_resultado(int lin, int col);
+void adicionar_matriz(Matriz *m);
 
 float buscar_Lista(Matriz_Esparsa *lista, int lin, int col);
 Matriz *buscar_IdMatriz(int id);
@@ -43,6 +45,7 @@ void diagonal_principal(int id);
 void liberar_Lista(Matriz_Esparsa **lista);
 void liberar_TodasMatrizes();
 void liberar_Matriz(int id);
+
 //--------------------------------------------------------------------------------------------------------
 
 //Uma função que faz a alocação de memória para cada nodo criado para uma lista encadeada;
@@ -68,11 +71,26 @@ void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col){
     novo->prox = *lista; // novo nodo aponta para o antigo primeiro/ ou null se estiver vazia
     *lista = novo; //N (lista) agora aponta para o novo primeiro nodo
 }
+//--------------------------------------------------------------------------------------------------------
+// Função que insere um novo valor na matriz ou atualiza um valor já existente
+void inserir_ou_atualizar(Matriz_Esparsa **lista, float valor, int lin, int col){
+    Matriz_Esparsa *aux = *lista;
 
+    while(aux != NULL){
+        if(aux->lin == lin && aux->col == col){
+            aux->dado += valor;
+            return;
+        }
+        aux = aux->prox;
+    }
 
+    if(valor != 0){
+        inserir_lista(lista, valor, lin, col);
+    }
+}
 
 //--------------------------------------------------------------------------------------------------------
-//Uma função que lê os dados da matriz, via teclado, e inseri na lista encadeada somente os dados diferentes de zero;
+//Uma função que lê os dados da matriz, via teclado, e insere na lista encadeada somente os dados diferentes de zero;
 void criar_matriz() {
     float dado; // variavel temporaria
     Matriz *m = (Matriz *) malloc(sizeof(Matriz)); //cria um nodo pra lista externa
@@ -112,6 +130,31 @@ void criar_matriz() {
     matrizes = m; // ponteiro global agora aponta pra nova matriz (ela é a primeira agora)
     
     printf("\nMatriz %d [%dx%d] criada com sucesso!\n", m->id, m->lin, m->col);
+}
+
+//--------------------------------------------------------------------------------------------------------
+// Função que cria e inicializa uma nova matriz esparsa vazia
+Matriz *criar_resultado(int lin, int col){
+    Matriz *m = (Matriz *) malloc(sizeof(Matriz));
+
+    if(!m){
+        printf("Erro de memoria\n");
+        exit(0);
+    }
+
+    m->lista = NULL;
+    m->lin = lin;
+    m->col = col;
+    m->id = contadorID++;
+    m->prox = NULL;
+
+    return m;
+}
+//--------------------------------------------------------------------------------------------------------
+//função que adiciona a nova matriz na lista de matrizes
+void adicionar_matriz(Matriz *m){
+    m->prox = matrizes;
+    matrizes = m;
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -192,20 +235,29 @@ void soma_matrizes(int id1, int id2){
     }
 
     if(m1->lin != m2->lin || m1->col != m2->col){
-        printf("Dimensoes incompatíveis para soma.\n");
+        printf("Dimensoes incompatíveis.\n");
         return;
     }
 
-    printf("\nResultado da soma:\n");
+    Matriz *res = criar_resultado(m1->lin, m1->col);
 
     for(int i = 0; i < m1->lin; i++){
         for(int j = 0; j < m1->col; j++){
-            float v1 = buscar_Lista(m1->lista, i, j);
-            float v2 = buscar_Lista(m2->lista, i, j);
-            printf(" %.2f ", v1 + v2);
+
+            float v = buscar_Lista(m1->lista, i, j) +
+                      buscar_Lista(m2->lista, i, j);
+
+            if(v != 0){
+                inserir_lista(&res->lista, v, i, j);
+            }
         }
-        printf("\n");
     }
+
+    adicionar_matriz(res);
+
+    printf("\nResultado armazenado na matriz %d\n", res->id);
+    printf("\nMatriz resultado:\n");
+    imprimir_Matriz(res->id);
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -220,22 +272,30 @@ void subtrair_matrizes(int id1, int id2){
     }
 
     if(m1->lin != m2->lin || m1->col != m2->col){
-        printf("Dimensoes incompatíveis para subtracao.\n");
+        printf("Dimensoes incompatíveis.\n");
         return;
     }
 
-    printf("\nResultado da subtracao:\n");
+    Matriz *res = criar_resultado(m1->lin, m1->col);
 
     for(int i = 0; i < m1->lin; i++){
         for(int j = 0; j < m1->col; j++){
-            float v1 = buscar_Lista(m1->lista, i, j);
-            float v2 = buscar_Lista(m2->lista, i, j);
-            printf(" %.2f ", v1 - v2);
-        }
-        printf("\n");
-    }
-}
 
+            float v = buscar_Lista(m1->lista, i, j) -
+                      buscar_Lista(m2->lista, i, j);
+
+            if(v != 0){
+                inserir_lista(&res->lista, v, i, j);
+            }
+        }
+    }
+
+    adicionar_matriz(res);
+
+    printf("\nResultado armazenado na matriz %d\n", res->id);
+    printf("\nMatriz resultado:\n");
+    imprimir_Matriz(res->id);
+}
 //--------------------------------------------------------------------------------------------------------
 //Uma função que multiplica duas matrizes;
 void multiplicar_matrizes(int id1, int id2){
@@ -248,27 +308,54 @@ void multiplicar_matrizes(int id1, int id2){
     }
 
     if(m1->col != m2->lin){
-        printf("Dimensoes incompatíveis para multiplicacao.\n");
+        printf("Dimensoes incompatíveis.\n");
         return;
     }
 
-    printf("\nResultado da multiplicacao:\n");
+    Matriz *res = criar_resultado(m1->lin, m2->col);
 
-    for(int i = 0; i < m1->lin; i++){
-        for(int j = 0; j < m2->col; j++){
+    Matriz_Esparsa *a = m1->lista;
 
-            float soma = 0;
+    while(a != NULL){ // percorre só valores não nulos de A
 
-            for(int k = 0; k < m1->col; k++){
-                float v1 = buscar_Lista(m1->lista, i, k);
-                float v2 = buscar_Lista(m2->lista, k, j);
-                soma += v1 * v2;
+        Matriz_Esparsa *b = m2->lista;
+
+        while(b != NULL){ // percorre só valores não nulos de B
+
+            // condição de multiplicação válida
+            if(a->col == b->lin){
+
+                int i = a->lin;
+                int j = b->col;
+
+                float valor = a->dado * b->dado;
+
+                // soma acumulada em C[i][j]
+                float atual = buscar_Lista(res->lista, i, j);
+                float novo = atual + valor;
+
+                // remove valor antigo, se existir
+                if(atual != 0){
+            
+                }
+
+                // insere atualizado
+                if(novo != 0){
+                    inserir_lista(&res->lista, novo, i, j);
+                }
             }
 
-            printf(" %.2f ", soma);
+            b = b->prox;
         }
-        printf("\n");
+
+        a = a->prox;
     }
+
+    adicionar_matriz(res);
+
+    printf("\nResultado armazenado na matriz %d [%dx%d]\n", res->id, res->lin, res->col);
+    printf("\nMatriz resultado:\n");
+    imprimir_Matriz(res->id);
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -281,24 +368,20 @@ void transposta(int id){
         return;
     }
 
-    Matriz_Esparsa *nova = NULL;
+    Matriz *res = criar_resultado(m->col, m->lin);
 
     Matriz_Esparsa *aux = m->lista;
+
     while(aux != NULL){
-        inserir_lista(&nova, aux->dado, aux->col, aux->lin);
+        inserir_lista(&res->lista, aux->dado, aux->col, aux->lin);
         aux = aux->prox;
     }
 
-    printf("\nMatriz transposta:\n");
-
-    for(int i = 0; i < m->col; i++){
-        for(int j = 0; j < m->lin; j++){
-            printf(" %.2f ", buscar_Lista(nova, i, j));
-        }
-        printf("\n");
-    }
-
-    liberar_Lista(&nova);
+    adicionar_matriz(res);
+    
+    printf("\nResultado armazenado na matriz %d\n", res->id);
+    printf("\nMatriz resultado:\n");
+    imprimir_Matriz(res->id);
 }
 
 //--------------------------------------------------------------------------------------------------------
