@@ -1,6 +1,7 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-// Cria o nodo
+// Cria o nodo - Lista interna
 typedef struct nodo 
 {
  float dado;
@@ -9,7 +10,7 @@ typedef struct nodo
 }Matriz_Esparsa; 
 
 //--------------------------------------------------------------------------------------------------------
-// cria uma estrtutura de matriz - Lista encadeada + dimensões
+// cria uma estrtutura de matriz - Lista externa
 typedef struct Matriz{
     Matriz_Esparsa *lista;  // lista com os valores não-zero
     int  lin, col;          // dimensões da matriz
@@ -17,8 +18,8 @@ typedef struct Matriz{
     struct Matriz* prox;
 } Matriz;
 
-Matriz *matrizes = NULL;
-int contadorID = 0;
+Matriz *matrizes = NULL; //Ponteiro global da lista externa - aponta para a primeira matriz
+int contadorID = 1; //contador pra id das matrizes
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que faz a alocação de memória para cada nodo criado para uma lista encadeada;
@@ -38,58 +39,117 @@ Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col){
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que insere na lista encadeada um nodo alocado;
-void inserir_lista(Matriz_Esparsa **lista, int dado, int lin, int col){
+void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col){
     Matriz_Esparsa *novo; // Cria um novo nodo
     novo = Cria_Matriz(dado, lin, col); // Cria um novo nodo na memoria
     novo->prox = *lista; // novo nodo aponta para o antigo primeiro/ ou null se estiver vazia
     *lista = novo; //N (lista) agora aponta para o novo primeiro nodo
 }
 
-//--------------------------------------------------------------------------------------------------------
-//Uma função que busca os dados em uma lista encadeada;
 
-//--------------------------------------------------------------------------------------------------------
-//Uma função que libera da memória uma lista encadeada;
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que lê os dados da matriz, via teclado, e inseri na lista encadeada somente os dados diferentes de zero;
-void criar_Matriz(){
-    Matriz *m = (Matriz*) malloc(sizeof(Matriz));
+void criar_matriz() {
+    float dado; // variavel temporaria
+    Matriz *m = (Matriz *) malloc(sizeof(Matriz)); //cria um nodo pra lista externa
     if(!m){
         printf("Erro de memoria\n");
         exit(0);
     }
-
-    m->lista = NULL;
-    m->id = contadorID++;
-    m->prox = matrizes;
-    matrizes = m;
-
-    float dado;
-    m->id = contadorID++;
+    
+    m->lista = NULL; // Lista interna começa vazia
+    m->id = contadorID; // recebe o numero do contador de id
+    contadorID++;  // contador id soma;
+    
+    printf("\nMatriz %d", m->id);
     printf("\nDigite a quantidade de colunas:");
     scanf("%d", &m->col);
-    printf("\nDigite a quantidade de linhas:");
+    printf("Digite a quantidade de linhas:\n");
     scanf("%d", &m->lin);
-
+    
     if (m->lin == 0 || m->col == 0) {
-        printf("Matriz sem dimensoes\n");
-        return;
+        printf("Matriz sem dimensoes!\n");
+        free(m); //libera a matriz já que n criou
+        contadorID--; // tira o contador
+        return; //volta
     }
-
     for (int i = 0; i < m->lin; i++){
         for (int j = 0; j < m->col; j++){
             printf("Digite o valor para [%d][%d]:", i, j);
             scanf("%f", &dado);
-
+            
             if(dado != 0){
-                inserir_lista(&m->lista, dado, i, j);
+                inserir_lista(&m->lista, dado, i, j); // insere na lista interna os numeros diferente de 0
             }
         }
     }
+    
+    m->prox  = matrizes; // o prox da lista externa se conecta com a nova matriz
+    matrizes = m; // ponteiro global agora aponta pra nova matriz (ela é a primeira agora)
+    
+    printf("\nMatriz %d [%dx%d] criada com sucesso!\n", m->id, m->lin, m->col);
+}
 
-    printf("Matriz %d [%dx%d] criada com sucesso!\n", m->id, m->lin, m->col);
+//--------------------------------------------------------------------------------------------------------
+//Uma função que lista as matrizes existentes
+void listar_Matrizes(){
+    Matriz *aux = matrizes; // recebe o primeiro nó
 
+    if(aux == NULL){ //se o pont externo é null = lista vazia
+        printf("\n Nenhuma matriz criada ainda.");
+        return;
+    }
+
+    printf("\nMATRIZES:\n");
+    while(aux != NULL){
+         printf("Matriz %d: [%dx%d]\n", aux->id, aux->lin, aux->col);
+         aux = aux->prox;
+    }
+    printf("\n");
+
+}
+//--------------------------------------------------------------------------------------------------------
+//Uma função que busca os dados em uma lista encadeada;
+float buscar_Lista(Matriz_Esparsa *lista, int lin, int col){
+    Matriz_Esparsa *aux = lista;
+    while (aux != NULL) { //enq não acabar lista
+        if (aux->lin == lin && aux->col == col){ // Compara linha e coluna
+             return aux->dado;} // retorna o valor
+
+        aux = aux->prox; // vai pro prox nó
+    }
+    return 0.0; // se n achou nada retorna zero
+}
+
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que retorna o id de uma matriz;
+Matriz *buscar_IdMatriz(int id){
+    Matriz *aux = matrizes; // recebe o primeiro nó
+    while (aux != NULL) { //enq não acabar lista
+        if(aux->id == id){
+            return aux; // Retorna o ponteiro para a Matriz
+        }
+    aux = aux->prox; // vai pro prox nó
+    }
+
+    return NULL; //id não existe
+}
+
+//--------------------------------------------------------------------------------------------------------
+//Uma função que imprime todos os dados da matriz, inclusive os zeros;
+void imprimir_Matriz(int id){
+    Matriz *m = buscar_IdMatriz(id); //retorna o ponteiro da matriz com o id pedido
+
+    printf("\nMatriz %d: [%dx%d]\n", m->id,m->lin,m->col);
+
+    for(int i = 0; i < m->lin; i++){
+        for(int j = 0; j < m->col; j++){
+            printf(" %.2f ", buscar_Lista(m->lista, i, j));
+        }
+        printf("\n");
+    }
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -105,14 +165,14 @@ void criar_Matriz(){
 //Uma função que gera a matriz transposta;
 
 //--------------------------------------------------------------------------------------------------------
-//Uma função que imprime todos os dados da matriz, inclusive os zeros;
-
-//--------------------------------------------------------------------------------------------------------
 //Uma função que imprime os elementos da diagonal principal, inclusive os zeros caso existam.
 
-void main (){
-    int opcao;
- 
+//--------------------------------------------------------------------------------------------------------
+//Uma função que libera da memória uma lista encadeada;
+
+int main (){
+    int opcao, id1;
+    
     do {
         printf("===========  MENU ===========\n");
         printf("1 - Criar matriz\n");
@@ -124,14 +184,19 @@ void main (){
         printf("7 - Transposta da matriz\n");
         printf("8 - Apagar matrizes\n");
         printf("0 - Sair\n");
+        //Uma função que imprime todos os dados da matriz, inclusive os zeros;
         printf("\nOpcao: ");
         scanf("%d", &opcao);
-    } while ( opcao != 0);
-    
-    switch (opcao){
-        case 1:
+        
+        switch (opcao){
+            case 1:
+            criar_matriz();
             break;
         case 2:
+            listar_Matrizes();
+            printf("Digite o ID: "); 
+            scanf("%d", &id1);
+            imprimir_Matriz(id1);
             break;
         case 3:
             break;
@@ -153,4 +218,8 @@ void main (){
         default:
             printf("Opcao invalida!\n");
     } 
+
+    } while ( opcao != 0);
+
+    return 0;
 }
