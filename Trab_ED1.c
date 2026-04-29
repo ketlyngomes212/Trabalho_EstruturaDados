@@ -10,38 +10,32 @@ typedef struct nodo
 }Matriz_Esparsa; 
 
 //--------------------------------------------------------------------------------------------------------
-// cria uma estrtutura de matriz - Lista externa
-typedef struct Matriz{
+// cria uma estrtutura de Lista externa
+typedef struct ListaExterna{
     Matriz_Esparsa *lista;  // lista com os valores não-zero
     int  lin, col;          // dimensões da matriz
     int id;
-    struct Matriz* prox;
-} Matriz;
+    struct ListaExterna* prox;
+} ListaExterna;
 
-Matriz *matrizes = NULL; //Ponteiro global da lista externa - aponta para a primeira matriz
+ListaExterna *matrizes = NULL; //Ponteiro global da lista externa - aponta para a primeira matriz
 int contadorID = 1; //contador pra id das matrizes
 
 //--------------------------------------------------------------------------------------------------------
 // Protótipos das funções
 Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col);
 void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col);
-
 void criar_matriz();
 void listar_Matrizes();
-Matriz *criar_resultado(int lin, int col);
-void adicionar_matriz(Matriz *m);
-
+ListaExterna *criar_resultado(int lin, int col);
 float buscar_Lista(Matriz_Esparsa *lista, int lin, int col);
-Matriz *buscar_IdMatriz(int id);
-
+ListaExterna *buscar_IdMatriz(int id);
 void imprimir_Matriz(int id);
-
 void soma_matrizes(int id1, int id2);
 void subtrair_matrizes(int id1, int id2);
 void multiplicar_matrizes(int id1, int id2);
 void transposta(int id);
 void diagonal_principal(int id);
-
 void liberar_Lista(Matriz_Esparsa **lista);
 void liberar_TodasMatrizes();
 void liberar_Matriz(int id);
@@ -60,6 +54,7 @@ Matriz_Esparsa * Cria_Matriz(float dado, int lin, int col){
     p->dado = dado; // guardar dado
     p->lin = lin; //guarda a linha
     p->col = col; //guarda a colunha
+    p->prox = NULL;
     return p; // Retorna o endereço do nodo criado
 }
 
@@ -73,7 +68,7 @@ void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col){
 }
 //--------------------------------------------------------------------------------------------------------
 // Função que insere um novo valor na matriz ou atualiza um valor já existente
-void inserir_ou_atualizar(Matriz_Esparsa **lista, float valor, int lin, int col){
+void inserir_acumulando(Matriz_Esparsa **lista, float valor, int lin, int col){
     Matriz_Esparsa *aux = *lista;
 
     while(aux != NULL){
@@ -92,8 +87,8 @@ void inserir_ou_atualizar(Matriz_Esparsa **lista, float valor, int lin, int col)
 //--------------------------------------------------------------------------------------------------------
 //Uma função que lê os dados da matriz, via teclado, e insere na lista encadeada somente os dados diferentes de zero;
 void criar_matriz() {
-    float dado; // variavel temporaria
-    Matriz *m = (Matriz *) malloc(sizeof(Matriz)); //cria um nodo pra lista externa
+
+    ListaExterna *m = (ListaExterna *) malloc(sizeof(ListaExterna)); //cria um nodo pra lista externa
     if(!m){
         printf("Erro de memoria\n");
         exit(0);
@@ -115,16 +110,37 @@ void criar_matriz() {
         contadorID--; // tira o contador
         return; //volta
     }
-    for (int i = 0; i < m->lin; i++){
-        for (int j = 0; j < m->col; j++){
-            printf("Digite o valor para [%d][%d]:", i, j);
-            scanf("%f", &dado);
-            
-            if(dado != 0){
-                inserir_lista(&m->lista, dado, i, j); // insere na lista interna os numeros diferente de 0
-            }
+
+    float dado;
+    int lin, col;
+    printf("---Informe os dados, para encerrar digite 0 no valor---\n");
+
+        while(1){
+        printf("Digite o valor: "); 
+        scanf("%f", &dado);
+        if(dado == 0){
+            break;}
+        printf("Digite a linha: "); 
+        scanf("%d", &lin);
+
+        printf("Digite a coluna: "); 
+        scanf("%d", &col);
+ 
+        if(lin < 0 || lin >= m->lin || col < 0 || col >= m->col){
+            printf("Posicao invalida! Tente novamente.\n");
+        } else {
+            inserir_lista(&m->lista, dado, lin, col);
+            printf("[%d][%d] = %.2f inserido.\n", lin, col, dado);
         }
     }
+
+    if(m->lista == NULL) {
+        printf("Matriz nao criada.\n");
+        free(m);
+        contadorID--;
+        return;
+    }
+    
     
     m->prox  = matrizes; // o prox da lista externa se conecta com a nova matriz
     matrizes = m; // ponteiro global agora aponta pra nova matriz (ela é a primeira agora)
@@ -134,8 +150,8 @@ void criar_matriz() {
 
 //--------------------------------------------------------------------------------------------------------
 // Função que cria e inicializa uma nova matriz esparsa vazia
-Matriz *criar_resultado(int lin, int col){
-    Matriz *m = (Matriz *) malloc(sizeof(Matriz));
+ListaExterna *criar_resultado(int lin, int col){
+    ListaExterna *m = (ListaExterna *) malloc(sizeof(ListaExterna));
 
     if(!m){
         printf("Erro de memoria\n");
@@ -147,20 +163,14 @@ Matriz *criar_resultado(int lin, int col){
     m->col = col;
     m->id = contadorID++;
     m->prox = NULL;
-
+    
     return m;
-}
-//--------------------------------------------------------------------------------------------------------
-//função que adiciona a nova matriz na lista de matrizes
-void adicionar_matriz(Matriz *m){
-    m->prox = matrizes;
-    matrizes = m;
 }
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que lista as matrizes existentes
 void listar_Matrizes(){
-    Matriz *aux = matrizes; // recebe o primeiro nó
+    ListaExterna *aux = matrizes; // recebe o primeiro nó
 
     if(aux == NULL){ //se o pont externo é null = lista vazia
         printf("\nNenhuma matriz criada ainda.");
@@ -185,14 +195,14 @@ float buscar_Lista(Matriz_Esparsa *lista, int lin, int col){
 
         aux = aux->prox; // vai pro prox nó
     }
-    return 0.0; // se n achou nada retorna zero
+    return 0; // se n achou nada retorna zero
 }
 
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que retorna o id de uma matriz;
-Matriz *buscar_IdMatriz(int id){
-    Matriz *aux = matrizes; // recebe o primeiro nó
+ListaExterna *buscar_IdMatriz(int id){
+    ListaExterna *aux = matrizes; // recebe o primeiro nó
     while (aux != NULL) { //enq não acabar lista
         if(aux->id == id){
             return aux; // Retorna o ponteiro para a Matriz
@@ -206,7 +216,7 @@ Matriz *buscar_IdMatriz(int id){
 //--------------------------------------------------------------------------------------------------------
 //Uma função que imprime todos os dados da matriz, inclusive os zeros;
 void imprimir_Matriz(int id){
-    Matriz *m = buscar_IdMatriz(id); //retorna o ponteiro da matriz com o id pedido
+    ListaExterna *m = buscar_IdMatriz(id); //retorna o ponteiro da matriz com o id pedido
     
     if(!m){
         printf("Matriz %d não existe.\n", id);
@@ -217,7 +227,7 @@ void imprimir_Matriz(int id){
 
     for(int i = 0; i < m->lin; i++){
         for(int j = 0; j < m->col; j++){
-            printf(" %.2f ", buscar_Lista(m->lista, i, j));
+            printf("%.2f\t", buscar_Lista(m->lista, i, j));
         }
         printf("\n");
     }
@@ -226,8 +236,8 @@ void imprimir_Matriz(int id){
 //--------------------------------------------------------------------------------------------------------
 //Uma função que soma duas matrizes;
 void soma_matrizes(int id1, int id2){
-    Matriz *m1 = buscar_IdMatriz(id1);
-    Matriz *m2 = buscar_IdMatriz(id2);
+    ListaExterna *m1 = buscar_IdMatriz(id1);
+    ListaExterna *m2 = buscar_IdMatriz(id2);
 
     if(!m1 || !m2){
         printf("Uma das matrizes nao existe.\n");
@@ -239,7 +249,7 @@ void soma_matrizes(int id1, int id2){
         return;
     }
 
-    Matriz *res = criar_resultado(m1->lin, m1->col);
+    ListaExterna *res = criar_resultado(m1->lin, m1->col);
 
     for(int i = 0; i < m1->lin; i++){
         for(int j = 0; j < m1->col; j++){
@@ -253,7 +263,8 @@ void soma_matrizes(int id1, int id2){
         }
     }
 
-    adicionar_matriz(res);
+    res->prox = matrizes;
+    matrizes = res;
 
     printf("\nResultado armazenado na matriz %d\n", res->id);
     printf("\nMatriz resultado:\n");
@@ -263,8 +274,8 @@ void soma_matrizes(int id1, int id2){
 //--------------------------------------------------------------------------------------------------------
 //Uma função que subtrai duas matrizes;
 void subtrair_matrizes(int id1, int id2){
-    Matriz *m1 = buscar_IdMatriz(id1);
-    Matriz *m2 = buscar_IdMatriz(id2);
+    ListaExterna *m1 = buscar_IdMatriz(id1);
+    ListaExterna *m2 = buscar_IdMatriz(id2);
 
     if(!m1 || !m2){
         printf("Uma das matrizes nao existe.\n");
@@ -276,7 +287,7 @@ void subtrair_matrizes(int id1, int id2){
         return;
     }
 
-    Matriz *res = criar_resultado(m1->lin, m1->col);
+    ListaExterna *res = criar_resultado(m1->lin, m1->col);
 
     for(int i = 0; i < m1->lin; i++){
         for(int j = 0; j < m1->col; j++){
@@ -290,7 +301,8 @@ void subtrair_matrizes(int id1, int id2){
         }
     }
 
-    adicionar_matriz(res);
+    res->prox = matrizes;
+    matrizes = res;
 
     printf("\nResultado armazenado na matriz %d\n", res->id);
     printf("\nMatriz resultado:\n");
@@ -299,8 +311,8 @@ void subtrair_matrizes(int id1, int id2){
 //--------------------------------------------------------------------------------------------------------
 //Uma função que multiplica duas matrizes;
 void multiplicar_matrizes(int id1, int id2){
-    Matriz *m1 = buscar_IdMatriz(id1);
-    Matriz *m2 = buscar_IdMatriz(id2);
+    ListaExterna *m1 = buscar_IdMatriz(id1);
+    ListaExterna *m2 = buscar_IdMatriz(id2);
 
     if(!m1 || !m2){
         printf("Uma das matrizes nao existe.\n");
@@ -312,37 +324,19 @@ void multiplicar_matrizes(int id1, int id2){
         return;
     }
 
-    Matriz *res = criar_resultado(m1->lin, m2->col);
+    ListaExterna *res = criar_resultado(m1->lin, m2->col);
 
     Matriz_Esparsa *a = m1->lista;
 
     while(a != NULL){ // percorre só valores não nulos de A
 
         Matriz_Esparsa *b = m2->lista;
-
-        while(b != NULL){ // percorre só valores não nulos de B
-
-            // condição de multiplicação válida
-            if(a->col == b->lin){
-
-                int i = a->lin;
-                int j = b->col;
-
-                float valor = a->dado * b->dado;
-
-                // soma acumulada em C[i][j]
-                float atual = buscar_Lista(res->lista, i, j);
-                float novo = atual + valor;
-
-                // remove valor antigo, se existir
-                if(atual != 0){
-            
-                }
-
-                // insere atualizado
-                if(novo != 0){
-                    inserir_lista(&res->lista, novo, i, j);
-                }
+ 
+        while(b != NULL){                // percorre só valores não-zero de B
+            if(a->col == b->lin){        // condição de multiplicação válida
+                // CORRIGIDO: passa só o produto (a->dado * b->dado)
+                // inserir_acumulando já soma com o que existe em res[i][j]
+                inserir_acumulando(&res->lista, a->dado * b->dado, a->lin, b->col);
             }
 
             b = b->prox;
@@ -351,7 +345,8 @@ void multiplicar_matrizes(int id1, int id2){
         a = a->prox;
     }
 
-    adicionar_matriz(res);
+    res->prox = matrizes;
+    matrizes = res;
 
     printf("\nResultado armazenado na matriz %d [%dx%d]\n", res->id, res->lin, res->col);
     printf("\nMatriz resultado:\n");
@@ -361,14 +356,14 @@ void multiplicar_matrizes(int id1, int id2){
 //--------------------------------------------------------------------------------------------------------
 //Uma função que gera a matriz transposta;
 void transposta(int id){
-    Matriz *m = buscar_IdMatriz(id);
+    ListaExterna *m = buscar_IdMatriz(id);
 
     if(!m){
         printf("Matriz nao encontrada.\n");
         return;
     }
 
-    Matriz *res = criar_resultado(m->col, m->lin);
+    ListaExterna *res = criar_resultado(m->col, m->lin);
 
     Matriz_Esparsa *aux = m->lista;
 
@@ -376,8 +371,9 @@ void transposta(int id){
         inserir_lista(&res->lista, aux->dado, aux->col, aux->lin);
         aux = aux->prox;
     }
-
-    adicionar_matriz(res);
+    
+    res->prox = matrizes;
+    matrizes = res;
     
     printf("\nResultado armazenado na matriz %d\n", res->id);
     printf("\nMatriz resultado:\n");
@@ -387,12 +383,18 @@ void transposta(int id){
 //--------------------------------------------------------------------------------------------------------
 //Uma função que imprime os elementos da diagonal principal, inclusive os zeros caso existam.
 void diagonal_principal(int id){
-    Matriz *m = buscar_IdMatriz(id);
+    ListaExterna *m = buscar_IdMatriz(id);
 
     if(!m){
         printf("Matriz nao encontrada.\n");
         return;
     }
+
+    if(m->lin != m->col){
+        printf("Matriz %d nao é quadrada;\n", id);
+        return;
+    }
+
 
     printf("\nDiagonal principal da matriz %d:\n", id);
 
@@ -410,12 +412,13 @@ void liberar_Lista(Matriz_Esparsa **lista){
         aux = *lista;
         *lista = (*lista)->prox;
         free(aux);
-}
+    }
 }
 
+//--------------------------------------------------------------------------------------------------------
 //liberar toda a lista
 void liberar_TodasMatrizes(){
-    Matriz *aux;
+    ListaExterna *aux;
     while(matrizes != NULL){
         aux = matrizes;
         matrizes = matrizes->prox;
@@ -429,10 +432,11 @@ void liberar_TodasMatrizes(){
 
 }
 
+//--------------------------------------------------------------------------------------------------------
 //liberar especifica
 void liberar_Matriz(int id){
-    Matriz *aux = matrizes;
-    Matriz *ant = NULL;
+    ListaExterna *aux = matrizes;
+    ListaExterna *ant = NULL;
     
     while( aux != NULL && aux->id != id ){
         ant = aux;
@@ -457,9 +461,31 @@ void liberar_Matriz(int id){
     
 }
 
+// busca um valor em uma matriz e mostra onde ele está
+void buscar_valorEspecifico(int id){
+    ListaExterna *m = buscar_IdMatriz(id);
+    if(!m){ 
+        printf("Matriz nao encontrada.\n"); 
+        return; }
+ 
+    float valor;
+    printf("Digite o numero para buscar: ");
+    scanf("%f", &valor);
+    int achou = 0;
+    Matriz_Esparsa *aux = m->lista;
+    while(aux != NULL){
+        if(aux->dado == valor){
+            printf("Valor %.2f encontrado em [%d][%d]\n", valor, aux->lin, aux->col);
+            achou = 1;
+        }
+        aux = aux->prox;
+    }
+    if(!achou) printf("Valor %.2f nao encontrado na matriz %d.\n", valor, id);
+}
+
 //--------------------------------------------------------------------------------------------------------
 int main (){
-    int opcao, id1;
+    int opcao, id1, id2;
     
     do {
         printf("\n===========  MENU ===========\n");
@@ -472,6 +498,8 @@ int main (){
         printf("7 - Transposta da matriz\n");
         printf("8 - Apagar matriz especifica\n");
         printf("9 - Apagar todas as matrizes\n");
+        printf("10 - Listar todas as matrizes\n");
+        printf("11 - Buscar valor\n");
         printf("0 - Sair\n");
         printf("\nOpcao: ");
         scanf("%d", &opcao);
@@ -501,7 +529,6 @@ int main (){
             }
             break;
         case 4: { 
-            int id2;
             if(matrizes == NULL){
                 printf("\nNenhuma matriz cadastrada\n");
             } else {
@@ -515,7 +542,6 @@ int main (){
             break;
         }
         case 5: { 
-            int id2;
             if(matrizes == NULL){
                 printf("\nNenhuma matriz cadastrada\n");
             } else {
@@ -529,7 +555,6 @@ int main (){
             break;
         }
         case 6: { 
-            int id2;
             if(matrizes == NULL){
                 printf("\nNenhuma matriz cadastrada\n");
             } else {
@@ -570,6 +595,20 @@ int main (){
             }
             break;
 
+        case 10: 
+            listar_Matrizes();
+            break;
+
+        case 11:
+            if(matrizes == NULL){ 
+                printf("\nNenhuma matriz cadastrada.\n"); 
+            } else { 
+                listar_Matrizes(); 
+                printf("Digite o ID: "); 
+                scanf("%d", &id1); 
+                buscar_valorEspecifico(id1); }
+            break;
+        
         case 0:
             liberar_TodasMatrizes();
             printf("\nSaindo..\n");
