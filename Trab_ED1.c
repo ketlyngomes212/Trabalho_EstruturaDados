@@ -60,11 +60,24 @@ Matriz_Esparsa * Cria_Nodo(float dado, int lin, int col){
 
 //--------------------------------------------------------------------------------------------------------
 //Uma função que insere na lista encadeada um nodo alocado;
+//é um insere ordernado
 void inserir_lista(Matriz_Esparsa **lista, float dado, int lin, int col){
     Matriz_Esparsa *novo; // Cria um novo nodo
     novo = Cria_Nodo(dado, lin, col); // Cria um novo nodo na memoria
-    novo->prox = *lista; // novo nodo aponta para o antigo primeiro/ ou null se estiver vazia
-    *lista = novo; //N (lista) agora aponta para o novo primeiro nodo
+    Matriz_Esparsa *aux  = *lista; // começa no começo da lista
+    Matriz_Esparsa *ant  = NULL; //anterior começa como null
+ 
+    //enq n acabar a lista, linha do "1" nó < menor que do novo OU(linha igual a linha do novo E coluna do "1" nó menor que a coluna do novo)
+    while(aux != NULL && (aux->lin < lin || (aux->lin == lin && aux->col < col))){
+        ant = aux; //ant recebe o aux
+        aux = aux->prox; //aux caminha pro proximo nó
+    }
+ 
+    novo->prox = aux; // quando achou o maior, o novo nó aponta pra esse maior
+    if(ant == NULL) { // se for o primeiro ou unico
+        *lista = novo;  // inseriu no início
+    } else{
+        ant->prox = novo;}  // anterior agora aponta pro novo nó
 }
 
 //--------------------------------------------------------------------------------------------------------
@@ -109,11 +122,25 @@ void criar_Matriz() {
         printf("Digite a coluna: "); //informar coluna
         scanf("%d", &col);
         
+
         if(lin < 0 || lin >= m->lin || col < 0 || col >= m->col){ // se a linha for negat ou se linha for maior que a linha definida pra dimensao (msm coisa pra coluna)
             printf("Posicao invalida! Tente novamente.\n"); // dá erro
         } else {
-            inserir_lista(&m->lista, dado, lin, col); // insere na lista interna
-            printf("[%d][%d] = %.2f inserido.\n", lin, col, dado); 
+            int existe = 0;      // verifica se posição já foi usada
+            Matriz_Esparsa *aux = m->lista;
+            while(aux != NULL){
+                if(aux->lin == lin && aux->col == col){ 
+                    existe = 1; 
+                    break; }
+                aux = aux->prox;
+            }
+
+            if(existe){
+                printf("Posicao [%d][%d] ja ocupada por %g, tente outra.\n", lin, col,buscar_Lista(m->lista, lin, col));
+            } else {
+                inserir_lista(&m->lista, dado, lin, col);
+                printf("[%d][%d] = %.2f inserido.\n", lin, col, dado);
+            }
         }
     }
     
@@ -180,7 +207,7 @@ void imprimir_Matriz(int id){
     ListaExterna *m = buscar_IdMatriz(id); //retorna o ponteiro da matriz com o id pedido
     
     if(!m){
-        printf("Matriz %d não existe.\n", id);
+        printf("Matriz %d nao existe.\n", id);
         return;
     }
 
@@ -188,7 +215,7 @@ void imprimir_Matriz(int id){
 
     for(int i = 0; i < m->lin; i++){
         for(int j = 0; j < m->col; j++){
-            printf("%.2f\t", buscar_Lista(m->lista, i, j)); //busca o valor da posição informada
+            printf("%g\t", buscar_Lista(m->lista, i, j)); //busca o valor da posição informada
         }
         printf("\n");
     }
@@ -245,7 +272,7 @@ void soma_matrizes(int id1, int id2){
     }
 
     if(m1->lin != m2->lin || m1->col != m2->col){ // se tiverem dimensões diferentes
-        printf("Dimensoes incompatíveis.\n");
+        printf("Dimensoes incompativeis.\n");
         return;
     }
 
@@ -279,7 +306,7 @@ void subtrair_matrizes(int id1, int id2){
     }
 
     if(m1->lin != m2->lin || m1->col != m2->col){ // se tiverem dimensões diferentes
-        printf("Dimensoes incompatíveis.\n");
+        printf("Dimensoes incompativeis.\n");
         return;
     }
 
@@ -312,7 +339,7 @@ void multiplicar_matrizes(int id1, int id2){
     }
 
     if(m1->col != m2->lin){
-        printf("Dimensoes incompatíveis.\n"); 
+        printf("Dimensoes incompativeis.\n"); 
         return;
     }
 
@@ -378,7 +405,7 @@ void diagonal_principal(int id){
     }
 
     if(m->lin != m->col){
-        printf("Matriz %d nao é quadrada;\n", id);
+        printf("Matriz %d nao e quadrada;\n", id);
         return;
     }
 
@@ -386,7 +413,7 @@ void diagonal_principal(int id){
     printf("\nDiagonal principal da matriz %d:\n", id);
 
     for(int i = 0; i < m->lin; i++){
-        printf(" %.2f ", buscar_Lista(m->lista, i, i)); //Linha e coluna são o mesmo valor i.
+        printf(" %g ", buscar_Lista(m->lista, i, i)); //Linha e coluna são o mesmo valor i.
     }
     printf("\n");
 }
@@ -432,7 +459,7 @@ void liberar_Matriz(int id){
     }
 
     if(aux == NULL){
-        printf("\n Matriz não encontrada.");
+        printf("\n Matriz nao encontrada.");
         return;
     }
 
@@ -468,13 +495,13 @@ void buscar_valorEspecifico(int id){
     Matriz_Esparsa *aux = m->lista;
     while(aux != NULL){
         if(aux->dado == valor){
-            printf("Valor %.2f encontrado em [%d][%d]\n", valor, aux->lin, aux->col);
+            printf("Valor %g encontrado em [%d][%d]\n", valor, aux->lin, aux->col);
             achou = 1;
         }
         aux = aux->prox;
     }
     if(!achou) 
-        printf("Valor %.2f nao encontrado na matriz %d.\n", valor, id);
+        printf("Valor %g nao encontrado na matriz %d.\n", valor, id);
 }
 
 //--------------------------------------------------------------------------------------------------------
