@@ -1,3 +1,5 @@
+// Alunas: Daniela Cristina Amorim de Souza GRR20255559 e Ketlyn Gomes de Oliveira GRR20252054
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -110,7 +112,7 @@ void criar_Matriz() {
 
     float dado;
     int lin, col;
-    printf("---Informe os dados, para encerrar digite 0 no valor---\n");
+    printf("\n---Informe os dados, para encerrar digite 0 no valor---\n\n");
     
     while(1){
         printf("Digite o valor: "); //pede valor
@@ -125,7 +127,7 @@ void criar_Matriz() {
         
 
         if(lin < 1 || lin > m->lin || col < 1 || col > m->col){ // se a linha for negat ou se linha for maior que a linha definida pra dimensao (msm coisa pra coluna)
-            printf("Posicao invalida! Tente novamente.\n"); // dá erro
+            printf("\nPosicao invalida! Tente novamente.\n\n"); // dá erro
         } else {
             int existe = 0;      // verifica se posição já foi usada
             Matriz_Esparsa *aux = m->lista;
@@ -140,7 +142,7 @@ void criar_Matriz() {
                 printf("Posicao [%d][%d] ja ocupada por %g, tente outra.\n", lin, col,buscar_Lista(m->lista, lin, col));
             } else {
                 inserir_lista(&m->lista, dado, lin, col);
-                printf("[%d][%d] = %g inserido.\n", lin, col, dado);
+                printf("\n[%d][%d] = %g inserido.\n\n", lin, col, dado);
             }
         }
     }
